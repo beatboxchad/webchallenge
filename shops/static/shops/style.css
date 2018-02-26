@@ -1,0 +1,13 @@
+.shop-title {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.btn-like {
+    float: center;
+}
+
+.shop-row {
+    padding-bottom: 2em;
+}

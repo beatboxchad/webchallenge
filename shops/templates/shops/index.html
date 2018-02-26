@@ -1,31 +1,85 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <title>Shops!</title>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/vue@2.5.13/dist/vue.js"></script>
+  <head>
+    <title>Shops!</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
 
-</head>
-<body>
-  <div class="container">
-    <div class="row">
-      <div class="col-sm-8 col-md-8 col-lg-8">
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.5.13/dist/vue.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/lodash@4.17.5/lodash.min.js"></script>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'shops/style.css' %}">
+  </head>
+  <body>
+    {% verbatim %}
+    <!--templates-->
+    <script type="text/x-template" id="shop">
+      <div class="card border">
+        <h4 class="card-title  shop-title">{{title}}</h4>
+        <div class="card-block text-center">
+          {% endverbatim %}
+          <img class="card-img img-fluid border" style="width:100%"
+               src="{% static 'shops/shop-placeholder.png' %}"></img>
+          {% verbatim %}
+
+          <div v-if="preferred">
+            <button type="button" class="btn btn-danger">Dislike</button>
+            <button type="button" class="btn btn-success btn-like">Like</button>
+          </div>
+          <div v-else>
+            <button type="button" class="btn btn-danger">Remove</button>
+          </div>
+
+        </div>
       </div>
-      <div class="col-sm--4 col-md-4 col-lg-4">
-        <a href="#">Admin Settings</a>
-        <a href="#">All Shops</a>
-        <a href="#">My Preferred Shops</a>
+    </script>
+
+    <script type="text/x-template" id="shops">
+      <div>
+        <div class="row shop-row card-group" v-for="shopRow in rowsOfFour">
+          <div class="col-sm-3 col-md-3 col-lg-3"
+               v-for="shop in shopRow"
+               :key="shop.id">
+            <shop :title="shop.title"
+                  :id="shop.id"
+                  preferred="false"></shop>
+          </div>
+        </div>
+      </div>
+    </script>
+    <!---->
+    <div class="container" id="app">
+      <div class="row">
+        <ul class="nav ml-auto">
+          <li class="nav-item">
+            <a class="nav-link"
+               v-on:click="adminSettings"
+               v-if="isAdminUser"
+               href="#">Admin Settings</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link active"
+               v-on:click="viewAllShops"
+               href="#">All Shops</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link"
+               v-on:click="viewPreferredShops"
+
+               href="#">My Preferred Shops</a>
+          </li>
+        </ul>
+      </div>
+      <div class="row">
+        <shops data-url="http://localhost:8000/shops/shops/"></shops>
       </div>
     </div>
-    <div class="row" id="shops">
-      <shops></shops>
-    </div>
-  </div>
-  <script src="{% static %}"></script>
-{% load static%}
-</body>
+
+
+    {% endverbatim %}
+    <script src="{% static 'shops/bundle.js' %}"></script>
+  </body>
 </html>
