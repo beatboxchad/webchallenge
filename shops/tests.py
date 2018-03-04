@@ -1,5 +1,5 @@
-from django.test import TestCase
-
+from rest_framework.authtoken.models import Token
+from rest_framework.test import APIClient
 
 # As an Administrator, I can promote other users to administrator
 

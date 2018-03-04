@@ -102,3 +102,6 @@ ENV/
 
 # emacs files
 .#*
+
+# the database
+db.sqlite3
