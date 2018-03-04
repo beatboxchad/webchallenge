@@ -1,9 +1,7 @@
 from django.test import TestCase
 
-# Create your tests here.
 
 # As an Administrator, I can promote other users to administrator
-
 
 # As an Administrator, I can load shops to the database, from an uploaded json file (shops.json provided).
 
