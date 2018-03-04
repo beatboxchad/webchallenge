@@ -74,10 +74,10 @@
         </ul>
       </div>
       <div class="row">
-        <shops data-url="http://localhost:8000/shops/shops/"></shops>
+        <shops v-if="activeComponent=='app-all-shops'" data-url="http://localhost:8000/shops/api/shops/"></shops>
+        <shops v-if="activeComponent=='app-preferred-shops'" data-url="http://localhost:8000/shops/api/preferred"></shops>
       </div>
     </div>
-
 
     {% endverbatim %}
     <script src="{% static 'shops/bundle.js' %}"></script>
