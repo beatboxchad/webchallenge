@@ -60,6 +60,7 @@ var app = new Vue({
         },
         adminSettings: function () {
             console.log("admin settings btn clicked");
+            return this.activeComponent = 'app-admin-area';
         }
     }
 });
