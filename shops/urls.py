@@ -11,5 +11,6 @@ router.register(r'shops', views.ShopViewSet)
 urlpatterns = [
     url(r'^$', views.index, name='index'),
     url(r'^api/', include(router.urls)),
-    url(r'^auth/', include('djoser.urls'))
+    url(r'^auth/', include('djoser.urls')),
+    url(r'^auth/', include('djoser.urls.authtoken')),
 ]

@@ -12,7 +12,7 @@ User = get_user_model()
 class UserSerializer(serializers.HyperlinkedModelSerializer):
     class Meta:
         model = User
-        fields = ('url', 'username', 'email', 'shops', 'is_superuser')
+        fields = ('url', 'email', 'shops', 'is_superuser')
 
 
 class GroupSerializer(serializers.HyperlinkedModelSerializer):
@@ -32,6 +32,5 @@ class UserRegistrationSerializer(BaseUserRegistrationSerializer):
         fields = ('url',
                   'id',
                   'email',
-                  'username',
-                  'is_superuser',
-                  'password', )
+                  'password',
+                  'is_superuser')

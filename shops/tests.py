@@ -7,13 +7,10 @@ from djet import assertions, restframework
 User = get_user_model()
 users = {
     'admin': {
-        'username': 'admin',
         'password': 'insecure',
         'email': 'admin@example.com',
-        'is_superuser': True,
     },
     'gerald': {
-        'username': 'gerald',
         'password': 'notsecure',
         'email': 'gerald@mcfred.com',
     }
@@ -22,11 +19,9 @@ users = {
 
 def create_user(**kwargs):
     data = {
-        'username': 'gerald',
         'password': 'secret',
         'email': 'gerald.mcfred@booya.com',
         'is_superuser': False,
-        'csrf_token': 'asdf'
     }
     data.update(kwargs)
     user = get_user_model().objects.create_user(**data)
@@ -43,39 +38,42 @@ class AccountTests(restframework.APIViewTestCase,
     def test_create_user_account(self):
         data = users['gerald']
 
-        response = self.client.post('/shops/auth/users/create/',
-                                    data,
-                                    format='json')
+        response = self.client.post('/shops/auth/users/create/', data)
 
         self.assert_status_equal(response, status.HTTP_201_CREATED)
         self.assertTrue('password' not in response.data)
         self.assertEqual(False, response.data['is_superuser'])
-        self.assert_instance_exists(User, username=data['username'])
-        user = User.objects.get(username=data['username'])
+        self.assert_instance_exists(User, email=data['email'])
+        user = User.objects.get(email=data['email'])
         self.assertTrue(user.check_password(data['password']))
 
     def test_create_admin_account(self):
         data = users['admin']
+        data.update({'is_superuser': True})
 
-        response = self.client.post('/shops/auth/users/create/',
-                                    data,
-                                    format='json')
+        response = self.client.post('/shops/auth/users/create/', data)
 
         self.assert_status_equal(response, status.HTTP_201_CREATED)
         self.assertTrue('password' not in response.data)
         self.assertEqual(True, response.data['is_superuser'])
-        self.assert_instance_exists(User, username=data['username'])
-        user = User.objects.get(username=data['username'])
+        self.assert_instance_exists(User, email=data['email'])
+        user = User.objects.get(email=data['email'])
         self.assertTrue(user.check_password(data['password']))
 
     """
     As a User (or Administrator), I can sign in using my email & password
     """
     def test_user_login(self):
-        self.assertEqual(1, 0)
+        data = users['gerald']
+        response = self.client.post('/shops/auth/token/create/', data)
+
+        self.assert_status_equal(response, status.HTTP_200_OK)
 
     def test_admin_login(self):
-        self.assertEqual(1, 0)
+        data = users['admin']
+        response = self.client.post('/shops/auth/token/create/', data)
+
+        self.assert_status_equal(response, status.HTTP_200_OK)
 
     """
     As an Administrator, I can promote other users to administrator
