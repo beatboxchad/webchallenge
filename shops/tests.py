@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from rest_framework import status
-from djet import assertions, restframework
+from djet import assertions
+from rest_framework.test import APITestCase
 
 
 User = get_user_model()
@@ -12,6 +13,10 @@ users = {
     'gerald': {
         'password': 'notsecure',
         'email': 'gerald@mcfred.com',
+    },
+    'penelope': {
+        'password': 'birdsncatsnbbq!',
+        'email': 'penelope@awexome.com',
     }
 }
 
@@ -28,9 +33,9 @@ def create_user(**kwargs):
     return user
 
 
-class AccountTests(restframework.APIViewTestCase,
-                   assertions.StatusCodeAssertionsMixin,
-                   assertions.InstanceAssertionsMixin):
+class CreateAccountTests(APITestCase,
+                         assertions.StatusCodeAssertionsMixin,
+                         assertions.InstanceAssertionsMixin):
     """
      As a User (or Administrator), I can sign up using my email & password
     """
@@ -59,12 +64,20 @@ class AccountTests(restframework.APIViewTestCase,
         user = User.objects.get(email=data['email'])
         self.assertTrue(user.check_password(data['password']))
 
+
+class LoginTests(APITestCase,
+                 assertions.StatusCodeAssertionsMixin,
+                 assertions.InstanceAssertionsMixin):
+    def setUp(self):
+        for _, userdata in users.items():
+            create_user(**userdata)
+
     """
     As a User (or Administrator), I can sign in using my email & password
     """
     def test_user_login(self):
         data = users['gerald']
-        create_user(**data)
+
         response = self.client.post('/shops/auth/token/create/', data)
 
         self.assert_status_equal(response, status.HTTP_200_OK)
@@ -79,8 +92,6 @@ class AccountTests(restframework.APIViewTestCase,
 
     def test_admin_login(self):
         data = users['admin']
-        data.update({'is_superuser': True})
-        create_user(**data)
 
         response = self.client.post('/shops/auth/token/create/', data)
 
@@ -94,18 +105,68 @@ class AccountTests(restframework.APIViewTestCase,
         self.assert_status_equal(auth_response, status.HTTP_200_OK)
         self.assertEqual(data['email'], auth_response.data['email'])
 
+
+class PromoteUserTests(APITestCase,
+                       assertions.StatusCodeAssertionsMixin,
+                       assertions.InstanceAssertionsMixin):
+
+    @classmethod
+    def setUpClass(self):
+        super(PromoteUserTests, self).setUpClass()
+
+        for _, userdata in users.items():
+            create_user(**userdata)
+
+        pk = User.objects.get(email=users['penelope']['email']).pk
+        penelope_data = users['penelope'].copy()
+        penelope_data.update({'is_superuser': True})
+        self._penelope = {
+            'data': penelope_data,
+            'url': '/shops/api/users/{}/'.format(pk),
+        }
+
+    def get_token(self, user):
+        response = self.client.post('/shops/auth/token/create/', user)
+        token_string = 'Token {}'.format(response.data['auth_token'])
+        return token_string
+
     """
     As an Administrator, I can promote other users to administrator
     """
     def test_promote_user_as_admin(self):
-        self.assertEqual(1, 1)
+        admin = users['admin']
+        self.client.credentials(HTTP_AUTHORIZATION=self.get_token(admin))
+        response = self.client.patch(self._penelope['url'],
+                                     {'is_superuser': True})
 
+        self.assert_status_equal(response, status.HTTP_200_OK)
+        self.assertEqual(response.data['is_superuser'], True)
+
+    """
+    As a User, I cannot promote other users to administrator
+    """
     def test_promote_user_as_user(self):
-        # test that a normal user cannot promote. 403 response
-        self.assertEqual(1, 1)
+        gerald = users['gerald']
+        self.client.credentials(HTTP_AUTHORIZATION=self.get_token(gerald))
+
+        response = self.client.patch(self._penelope['url'],
+                                     {'is_superuser': True})
+
+        self.assert_status_equal(response, status.HTTP_403_FORBIDDEN)
+#        self.assertEqual(response.data['is_superuser'], False)
+
+    """
+    Not logged in, I cannot promote other users to administrator
+    """
+    def test_promote_user_as_anonymous(self):
+        response = self.client.patch(self._penelope['url'],
+                                     {'is_superuser': True})
+
+        self.assert_status_equal(response, status.HTTP_403_FORBIDDEN)
+#        self.assertEqual(response.data['is_superuser'], False)
 
 
-class ShopsTests(restframework.APIViewTestCase):
+class ShopsTests(APITestCase):
     """
     As an Administrator, I can load shops to the database,
     from an uploaded json file (shops.json provided).
