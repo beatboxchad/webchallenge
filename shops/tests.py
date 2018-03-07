@@ -153,7 +153,6 @@ class PromoteUserTests(APITestCase,
                                      {'is_superuser': True})
 
         self.assert_status_equal(response, status.HTTP_403_FORBIDDEN)
-#        self.assertEqual(response.data['is_superuser'], False)
 
     """
     Not logged in, I cannot promote other users to administrator
@@ -162,8 +161,7 @@ class PromoteUserTests(APITestCase,
         response = self.client.patch(self._penelope['url'],
                                      {'is_superuser': True})
 
-        self.assert_status_equal(response, status.HTTP_403_FORBIDDEN)
-#        self.assertEqual(response.data['is_superuser'], False)
+        self.assert_status_equal(response, status.HTTP_401_UNAUTHORIZED)
 
 
 class ShopsTests(APITestCase):
