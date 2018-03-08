@@ -1,7 +1,10 @@
 from django.contrib.auth import get_user_model
+from rest_framework.test import APITestCase
+from webchallenge.settings import BASE_DIR
 from rest_framework import status
 from djet import assertions
-from rest_framework.test import APITestCase
+from pprint import pprint
+import json
 
 
 User = get_user_model()
@@ -164,16 +167,48 @@ class PromoteUserTests(APITestCase,
         self.assert_status_equal(response, status.HTTP_401_UNAUTHORIZED)
 
 
-class ShopsTests(APITestCase):
+class CreateShopsTests(APITestCase,
+                       assertions.StatusCodeAssertionsMixin,
+                       assertions.InstanceAssertionsMixin):
+    @classmethod
+    def setUpClass(self):
+        super(CreateShopsTests, self).setUpClass()
+
+        for _, userdata in users.items():
+            create_user(**userdata)
+
+        shops_path = BASE_DIR + '/shops/fixtures/shops/shops.json'
+        self._shops_list = json.load(open(shops_path))
+
+    def admin_upload_shops(self):
+        admin = User.objects.get(email=users['admin']['email'])
+        self.client.force_authenticate(user=admin)
+        response = self.client.post('/shops/api/shops/', self._shops_list)
+        return response
+
     """
     As an Administrator, I can load shops to the database,
     from an uploaded json file (shops.json provided).
     """
     def test_admin_can_upload_shops(self):
-        self.assertEqual(1, 1)
+        response = self.admin_upload_shops()
+        self.assert_status_equal(response, status.HTTP_201_CREATED)
+
+    def test_admin_upload_clobbers_existing(self):
+        posted = self.admin_upload_shops()
+        retrieved = self.client.get('/shops/api/shops/')
+        self.assertEqual(posted.data, retrieved.data)
 
     def test_user_cannot_upload_shops(self):
-        self.assertEqual(1, 1)
+        gerald = User.objects.get(email=users['gerald']['email'])
+        self.client.force_authenticate(user=gerald)
+        response = self.client.post('/shops/api/shops/', self._shops_list)
+        self.assert_status_equal(response, status.HTTP_403_FORBIDDEN)
+
+
+class ListAndLikeShopsTests(APITestCase,
+                            assertions.StatusCodeAssertionsMixin,
+                            assertions.InstanceAssertionsMixin):
 
     """
     As a User (or Administrator), I can display the list of shops
