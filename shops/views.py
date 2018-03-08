@@ -1,8 +1,9 @@
 from shops.serializers import UserSerializer, ShopSerializer
+from shops.mixins import ClobberShopListModelMixin
 from shops.permissions import IsSuperUserOrReadOnly
 from django.contrib.auth import get_user_model
+from rest_framework import generics, viewsets, mixins
 from django.shortcuts import render
-from rest_framework import viewsets
 from shops.models import Shop
 
 
@@ -22,6 +23,24 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
 
 
-class ShopViewSet(viewsets.ModelViewSet):
+class ShopList(ClobberShopListModelMixin,
+               mixins.CreateModelMixin,
+               mixins.ListModelMixin,
+               generics.GenericAPIView):
+    permission_classes = (IsSuperUserOrReadOnly,)
+    queryset = Shop.objects.all()
+    serializer_class = ShopSerializer
+
+    def get(self, request, *args, **kwargs):
+        return self.list(request, *args, **kwargs)
+
+    def post(self, request, *args, **kwargs):
+        return self.create(request, *args, **kwargs)
+
+    def delete(self, request, *args, **kwargs):
+        return self.destroy(request, *args, **kwargs)
+
+
+class ShopDetail(generics.RetrieveAPIView):
     queryset = Shop.objects.all()
     serializer_class = ShopSerializer

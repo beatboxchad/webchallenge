@@ -3,7 +3,6 @@ from rest_framework.test import APITestCase
 from webchallenge.settings import BASE_DIR
 from rest_framework import status
 from djet import assertions
-from pprint import pprint
 import json
 
 

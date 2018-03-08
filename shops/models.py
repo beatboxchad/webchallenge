@@ -1,11 +1,10 @@
-from django.utils.translation import ugettext_lazy as _
-from shops.permissions import IsUserOrReadOnly
 from django.contrib.auth.models import AbstractUser, BaseUserManager
+from django.utils.translation import ugettext_lazy as _
 from django.db import models
 
 
 class Shop(models.Model):
-    title = models.CharField('name of shop', max_length=200)
+    title = models.CharField('name of shop', max_length=200, unique=True)
 
 
 class UserManager(BaseUserManager):
@@ -43,7 +42,6 @@ class UserManager(BaseUserManager):
 
 
 class User(AbstractUser):
-    permissions_classes = (IsUserOrReadOnly)
     shops = models.ManyToManyField(Shop, blank=True)
     username = None
     email = models.EmailField(_('email address'), unique=True)
