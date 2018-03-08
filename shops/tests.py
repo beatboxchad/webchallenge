@@ -2,6 +2,7 @@ from django.contrib.auth import get_user_model
 from rest_framework.test import APITestCase
 from webchallenge.settings import BASE_DIR
 from rest_framework import status
+from shops.models import Shop
 from djet import assertions
 import json
 
@@ -11,6 +12,7 @@ users = {
     'admin': {
         'password': 'insecure',
         'email': 'admin@example.com',
+        'is_superuser': True
     },
     'gerald': {
         'password': 'notsecure',
@@ -55,7 +57,6 @@ class CreateAccountTests(APITestCase,
 
     def test_create_admin_account(self):
         data = users['admin']
-        data.update({'is_superuser': True})
 
         response = self.client.post('/shops/auth/users/create/', data)
 
@@ -208,33 +209,66 @@ class CreateShopsTests(APITestCase,
 class ListAndLikeShopsTests(APITestCase,
                             assertions.StatusCodeAssertionsMixin,
                             assertions.InstanceAssertionsMixin):
+    @classmethod
+    def setUpClass(self):
+        super(ListAndLikeShopsTests, self).setUpClass()
+        self._shop = Shop.objects.create(title="I'm a shop")
+        self._fav_shop = Shop.objects.create(title="I'm a favorited shop")
+
+        self._admin = create_user(**users['admin'])
+        self._gerald = create_user(**users['gerald'])
 
     """
     As a User (or Administrator), I can display the list of shops
     """
     def test_any_user_can_list_shops(self):
-        self.assertEqual(1, 1)
+            self.client.force_authenticate(self._gerald)
+            response = self.client.get('/shops/api/shops/')
+            self.assert_status_equal(response, status.HTTP_200_OK)
+
+            self.client.force_authenticate(self._admin)
+            response = self.client.get('/shops/api/shops/')
+            self.assert_status_equal(response, status.HTTP_200_OK)
 
     """
     As a User, I can like a shop, so it can be added to my preferred shops
     """
     def test_any_user_can_like_shop(self):
-        self.assertEqual(1, 1)
+        self.client.force_authenticate(self._gerald)
+        pk = self._fav_shop.pk
+        liked_shop_url = '/shops/api/shops/{}/like/'.format(pk)
+        response = self.client.put(liked_shop_url)
+
+        self.assert_status_equal(response, status.HTTP_200_OK)
+        self.assert_instance_exists(Shop, users=self._gerald)
 
     """
     Acceptance criteria: liked shops shouldn’t be displayed on the main page
     """
     def test_liked_shops_not_in_main_list(self):
-        self.assertEqual(1, 1)
+        self.client.force_authenticate(self._gerald)
+        self._fav_shop.users.add(self._gerald)
+        self._fav_shop.save()
+        response = self.client.get('/shops/api/shops/')
+        self.assert_status_equal(response, status.HTTP_200_OK)
+        self.assertNotContains(response, "I'm a favorited shop")
 
     """
     As a User, I can display the list of preferred shops
     """
     def test_user_retrieve_preferred_shops(self):
-        self.assertEqual(1, 1)
+        self.client.force_authenticate(self._gerald)
+        url = '/shops/api/users/{}/shops/'.format(self._gerald.pk)
+        response = self.client.get(url)
+        self.assert_status_equal(response, status.HTTP_200_OK)
 
     """
     As a User, I can remove a shop from my preferred shops list
     """
-    def test_user_delete_preferred_shop(self):
-        self.assertEqual(1, 1)
+    def test_user_unlike_shop(self):
+        self.client.force_authenticate(self._gerald)
+        pk = self._fav_shop.pk
+        unliked_shop_url = '/shops/api/shops/{}/unlike/'.format(pk)
+        response = self.client.put(unliked_shop_url)
+        self.assert_status_equal(response, status.HTTP_200_OK)
+        self.assert_instance_does_not_exist(Shop, users=self._gerald)
