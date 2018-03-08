@@ -18,5 +18,13 @@ urlpatterns = [
     url(r'^api/shops/(?P<pk>[0-9]+)/$',
         views.ShopDetail.as_view(),
         name='shop-detail'),
-
+    url(r'^api/shops/(?P<pk>[0-9]+)/unlike/$',
+        views.UnlikeShop.as_view(),
+        name='unlike-shop'),
+    url(r'^api/shops/(?P<pk>[0-9]+)/like/$',
+        views.LikeShop.as_view(),
+        name='like-shop'),
+       url(r'^api/users/(?P<pk>[0-9]+)/shops/$',
+        views.UserShops.as_view(),
+        name='user-shops'),
 ]

@@ -42,7 +42,7 @@ class UserManager(BaseUserManager):
 
 
 class User(AbstractUser):
-    shops = models.ManyToManyField(Shop, blank=True)
+    shops = models.ManyToManyField(Shop, blank=True, related_name='users')
     username = None
     email = models.EmailField(_('email address'), unique=True)
 
