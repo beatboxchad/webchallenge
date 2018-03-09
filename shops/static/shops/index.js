@@ -1,33 +1,32 @@
 var lodash = require('./lodash.min.js');
 
 var BASE_URL = window.location.origin + '/shops/';
+var bus = new Vue();
 
 var Shop = {
     template: '#shop',
     props: ['title', 'url', 'preferred', 'httpConfig'],
     methods: {
         like_shop: function () {
-            console.log("actual like function called, homie");
             var vm = this;
             axios.put(vm.url + 'like/', {}, vm.httpConfig)
                 .then(function (response) {
 
                 });
 
-            vm.$emit('like', {title: this.title,
+            bus.$emit('like', {title: this.title,
                                 url: this.url
                                });
 
         },
         unlike_shop: function () {
-            console.log("actual unlike function called, homie");
             var vm = this;
             axios.put(vm.url + 'unlike/', {}, vm.httpConfig)
                 .then(function (response) {
 
                 });
 
-            vm.$emit('unlike', {title: this.title,
+            bus.$emit('unlike', {title: this.title,
                                 url: this.url
                                });
 
@@ -41,6 +40,19 @@ var Shops = {
         shops: [],
         preferred: false,
         httpConfig: {}
+    },
+    mounted: function() {
+        vm = this;
+        bus.$on('like', function (shop) {
+            vm.shops = lodash.filter(vm.shops, function(item) {
+                return item.url != shop.url;
+            });
+        });
+        bus.$on('unlike', function (shop) {
+            vm.shops = lodash.filter(vm.shops, function(item) {
+                return item.url != shop.url;
+            });
+        });
     },
     computed: {
         rows_of_four: function () {

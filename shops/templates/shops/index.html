@@ -61,12 +61,12 @@
             <button type="button"
                     class="btn btn-danger">Dislike</button>
             <button type="button"
-                    v-on:click="like_shop"
+                    v-on:click.prevent="like_shop"
                     class="btn btn-success btn-like">Like</button>
           </div>
           <div v-else>
             <button type="button"
-                    v-on:click="unlike_shop"
+                    v-on:click.prevent="unlike_shop"
                     class="btn btn-danger">Remove</button>
           </div>
         </div>
@@ -87,7 +87,7 @@
         </div>
       </div>
     </script>
-
+    <!---->
     <div id="app">
       <div class="container">
         <div class="row">
@@ -117,13 +117,11 @@
                auth-url="http://localhost:8000/shops/auth/token/create/">
         </login>
         <shops v-if="active_component=='app-all-shops'"
-               v-on:like="function () {console.log('fuck me')}"
                :shops="all_shops"
                :http-config="httpConfig"
                >
         </shops>
         <shops v-if="active_component=='app-preferred-shops'"
-               v-on:unlike="booyaSucka"
                :preferred="true"
                :http-config="httpConfig"
                :shops="user.shops">
@@ -131,7 +129,7 @@
       </div>
 
     </div>
-    <!---->
+
   </div>
 
 
