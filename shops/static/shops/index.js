@@ -57,8 +57,7 @@ var Admin = {
     template: '#admin',
     data: function () {
         return {
-            users: [],
-            admins: []
+            users: []
         };
     },
     props: {
@@ -73,19 +72,25 @@ var Admin = {
             var vm = this;
             axios.get(BASE_URL + 'api/users/', vm.httpConfig)
                 .then(function (response) {
-                    vm.users = lodash.filter(response.data, function(item) {
-                        console.log(item.is_superuser);
-                        return item.is_superuser == false;
-                    });
-                    vm.admins = lodash.filter(response.data, function(item) {
-                        console.log(item.is_superuser);
-                        return item.is_superuser == true;
-                    });
+                    vm.users = response.data;
                 });
         },
-        promote_user: function () {
+        promote_user: function (user) {
+            var vm = this;
+            axios.patch(user.url, {is_superuser: true}, vm.httpConfig)
+                .then(function (response) {
+                    vm.get_users();
+                });
         },
-        demote_admin: function () {
+        // instructions were that this didn't function,
+        // but I wanted to play with vue FIXME
+        demote_admin: function (user) {
+            var vm = this;
+            axios.patch(user.url, {is_superuser: false}, vm.httpConfig)
+                .then(function (response) {
+                    vm.get_users();
+                });
+
         },
         load_shops: function () {
         }
