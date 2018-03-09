@@ -1,67 +1,170 @@
 (function(){function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s}return e})()({1:[function(require,module,exports){
 var lodash = require('./lodash.min.js');
 
+var BASE_URL = window.location.origin + '/shops/';
+
 var Shop = {
     template: '#shop',
-    props: ['title', 'id', 'preferred']
+    props: ['title', 'url', 'preferred', 'httpConfig'],
+    methods: {
+        like_shop: function () {
+            console.log("actual like function called, homie");
+            var vm = this;
+            axios.put(vm.url + 'like/', {}, vm.httpConfig)
+                .then(function (response) {
+
+                });
+
+            vm.$emit('like', {title: this.title,
+                                url: this.url
+                               });
+
+        },
+        unlike_shop: function () {
+            console.log("actual unlike function called, homie");
+            var vm = this;
+            axios.put(vm.url + 'unlike/', {}, vm.httpConfig)
+                .then(function (response) {
+
+                });
+
+            vm.$emit('unlike', {title: this.title,
+                                url: this.url
+                               });
+
+        }
+    }
 };
 
 var Shops = {
     template: '#shops',
-    props: [ "dataUrl" ],
-    data: function() {
-        return {
-            shops: []
-        };
+    props: {
+        shops: [],
+        preferred: false,
+        httpConfig: {}
     },
     computed: {
-        rowsOfFour: function() {
+        rows_of_four: function () {
             return lodash.chunk(this.shops, 4);
         }
     },
     methods: {
-        getShops: function() {
-            axios.get(this.dataUrl)
-                .then(function(response) {
-                    this.shops = response.data;
+        booyaSucka: function (payload) {
+            console.log(payload);
+        }
+    }
+};
 
-                }.bind(this)
-                     )
-                .catch(function(error) {
-                    console.log(error);
+var Login  = {
+    template: '#login',
+    data: function () {
+        return {
+            email: 'admin@example.com', //FIXME!!
+            password: 'insecure'
+        };
+    },
+    props: ['authUrl'],
+    methods: {
+        perform_login: function () {
+            var cm = this;
+            axios.post(cm.authUrl, {
+                email: cm.email,
+                password: cm.password
+            })
+                .then(function (response) {
+                    cm.$emit('authenticated', response.data.auth_token);
                 });
         }
-    },
-    created: function() {
-        this.getShops();
-
     }
 };
 
 Vue.component("shop", Shop);
 Vue.component("shops", Shops);
+Vue.component("login", Login);
 
-var rootModel = {
-    user: '',
-    isAdminUser: false,
-    activeComponent: 'app-all-shops'
-};
 
-var app = new Vue({
+new Vue({
     el: '#app',
-    data: rootModel,
+    data: {
+        all_shops: [],
+        user: {
+            is_superuser: false,
+            id: 0,
+            email: '',
+            url: '',
+            shops: []
+        },
+        httpConfig: {
+            headers: {
+                Accept: 'application/json',
+                Authorization: ''
+            }
+        },
+        active_component: 'app-login'
+    },
+    mounted: function () {
+        this.active_component = 'app-login';
+    },
     methods: {
-        viewAllShops: function () {
-            console.log('view all shops btn clicked');
-            return this.activeComponent = 'app-all-shops';
+                booyaSucka: function (payload) {
+            console.log(payload);
+                },
+
+        login: function (payload) {
+            var vm = this;
+            vm.httpConfig.headers.Authorization = 'Token ' + payload;
+            axios.get(BASE_URL + 'auth/me/', vm.httpConfig)
+                .then(function (response) {
+                    vm.user.id = response.data.id;
+                    vm.user.email = response.data.email;
+                    vm.user.url = BASE_URL + 'api/users/' +
+                        vm.user.id + "/";
+
+                    axios.get(vm.user.url, vm.httpConfig)
+                        .then(function (rsp) {
+                            vm.user.is_superuser = rsp.data.is_superuser;
+                            vm.user.shops = rsp.data.shops;
+                        });
+                });
+            return this.view_all_shops();
         },
-        viewPreferredShops: function () {
-            console.log('view completed shops btn clicked');
-            return this.activeComponent = 'app-preferred-shops';
+        logout: function () {
         },
-        adminSettings: function () {
-            console.log("admin settings btn clicked");
-            return this.activeComponent = 'app-admin-area';
+        view_all_shops: function () {
+            this.get_shops();
+            return this.active_component = 'app-all-shops';
+        },
+        view_preferred_shops: function () {
+            this.get_user_shops();
+            return this.active_component = 'app-preferred-shops';
+        },
+        admin_settings: function () {
+            return this.active_component = 'app-admin-area';
+        },
+        get_shops: function () {
+            var vm = this;
+            axios.get(BASE_URL + 'api/shops/', vm.httpConfig)
+                .then(function (response) {
+                    vm.all_shops = response.data;
+                })
+                .catch(function (error) {
+                    console.log(error);
+                });
+        },
+        get_user_shops: function () {
+            console.log('fetching user shops');
+            var vm = this;
+            axios.get(this.user.url + 'shops/', vm.httpConfig)
+                .then(function (response) {
+                    vm.user.shops = response.data;
+                })
+                .catch(function (error) {
+                    console.log(error);
+                });
+        },
+        promote_user: function (user) {
+        },
+        demote_user: function (user) {
         }
     }
 });
