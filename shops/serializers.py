@@ -53,8 +53,8 @@ class ShopUnlikeSerializer(serializers.ModelSerializer):
 
 class UserShopSerializer(serializers.ModelSerializer):
     class Meta:
-        model = User
-        fields = ('shops',)
+        model = Shop
+        fields = ('url', 'title')
 
 
 class UserRegistrationSerializer(BaseUserRegistrationSerializer):

@@ -67,5 +67,7 @@ class UnlikeShop(generics.UpdateAPIView):
 
 
 class UserShops(generics.ListAPIView):
-    queryset = User.objects.all()
+    def get_queryset(self):
+        return Shop.objects.filter(users=self.request.user)
+
     serializer_class = UserShopSerializer
