@@ -10,27 +10,19 @@ var Shop = {
     methods: {
         like_shop: function () {
             var vm = this;
-            axios.put(vm.url + 'like/', {}, vm.httpConfig)
-                .then(function (response) {
-
-                });
+            axios.put(vm.url + 'like/', {}, vm.httpConfig);
 
             bus.$emit('like', {title: this.title,
-                                url: this.url
-                               });
-
+                               url: this.url
+                              });
         },
         unlike_shop: function () {
             var vm = this;
-            axios.put(vm.url + 'unlike/', {}, vm.httpConfig)
-                .then(function (response) {
-
-                });
+            axios.put(vm.url + 'unlike/', {}, vm.httpConfig);
 
             bus.$emit('unlike', {title: this.title,
-                                url: this.url
-                               });
-
+                                 url: this.url
+                                });
         }
     }
 };
@@ -59,10 +51,44 @@ var Shops = {
         rows_of_four: function () {
             return lodash.chunk(this.shops, 4);
         }
+    }
+};
+
+var Admin = {
+    template: '#admin',
+    data: function () {
+        return {
+            users: [],
+            admins: []
+        };
+    },
+    props: {
+        httpConfig: {}
+    },
+    mounted: function () {
+        this.get_users();
+
     },
     methods: {
-        booyaSucka: function (payload) {
-            console.log(payload);
+        get_users: function () {
+            var vm = this;
+            axios.get(BASE_URL + 'api/users/', vm.httpConfig)
+                .then(function (response) {
+                    vm.users = lodash.filter(response.data, function(item) {
+                        console.log(item.is_superuser);
+                        return item.is_superuser == false;
+                    });
+                    vm.admins = lodash.filter(response.data, function(item) {
+                        console.log(item.is_superuser);
+                        return item.is_superuser == true;
+                    });
+                });
+        },
+        promote_user: function () {
+        },
+        demote_admin: function () {
+        },
+        load_shops: function () {
         }
     }
 };
@@ -75,11 +101,10 @@ var Login  = {
             password: 'insecure'
         };
     },
-    props: ['authUrl'],
     methods: {
         perform_login: function () {
             var cm = this;
-            axios.post(cm.authUrl, {
+            axios.post(BASE_URL + 'auth/token/create/', {
                 email: cm.email,
                 password: cm.password
             })
@@ -93,7 +118,7 @@ var Login  = {
 Vue.component("shop", Shop);
 Vue.component("shops", Shops);
 Vue.component("login", Login);
-
+Vue.component("admin", Admin);
 
 new Vue({
     el: '#app',
@@ -138,7 +163,8 @@ new Vue({
                             vm.user.shops = rsp.data.shops;
                         });
                 });
-            return this.view_all_shops();
+            //            return this.view_all_shops();
+            return this.admin_settings();
         },
         logout: function () {
         },
