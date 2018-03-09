@@ -1,6 +1,5 @@
 (function(){function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s}return e})()({1:[function(require,module,exports){
 var lodash = require('./lodash.min.js');
-
 var BASE_URL = window.location.origin + '/shops/';
 var bus = new Vue();
 
@@ -58,7 +57,9 @@ var Admin = {
     template: '#admin',
     data: function () {
         return {
-            users: []
+            users: [],
+            file: '',
+            json: ''
         };
     },
     props: {
@@ -66,7 +67,6 @@ var Admin = {
     },
     mounted: function () {
         this.get_users();
-
     },
     methods: {
         get_users: function () {
@@ -93,7 +93,36 @@ var Admin = {
                 });
 
         },
-        load_shops: function () {
+        upload_shops: function () {
+            var vm = this;
+            var requestConfig = {
+                headers: {
+                    'Content-Type': 'multipart/form-data'
+                }
+            };
+
+            requestConfig.headers.Accept = vm.httpConfig.headers.Accept;
+            requestConfig.headers.Authorization = vm.httpConfig.headers.Authorization;
+
+            axios.post(BASE_URL + 'api/shops/', vm.json, vm.httpConfig);
+
+        },
+        handleFileUpload(){
+            var vm = this;
+            var reader = new FileReader();
+
+            reader.onload = function(evt) {
+                if(evt.target.readyState != 2) return;
+                if(evt.target.error) {
+                    alert('Error while reading file');
+                    return;
+                }
+
+                filecontent = evt.target.result;
+
+                vm.json = JSON.parse(filecontent);
+            };
+            reader.readAsText(this.$refs.shop_file.files[0]);
         }
     }
 };
@@ -102,7 +131,7 @@ var Login  = {
     template: '#login',
     data: function () {
         return {
-            email: 'admin@example.com', //FIXME!!
+            email: 'admin@example.com',
             password: 'insecure'
         };
     },
@@ -148,10 +177,6 @@ new Vue({
         this.active_component = 'app-login';
     },
     methods: {
-                booyaSucka: function (payload) {
-            console.log(payload);
-                },
-
         login: function (payload) {
             var vm = this;
             vm.httpConfig.headers.Authorization = 'Token ' + payload;
