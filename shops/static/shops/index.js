@@ -192,8 +192,8 @@ new Vue({
                             vm.user.shops = rsp.data.shops;
                         });
                 });
-            //            return this.view_all_shops();
-            return this.admin_settings();
+            return this.view_all_shops();
+
         },
         logout: function () {
         },
@@ -228,10 +228,6 @@ new Vue({
                 .catch(function (error) {
                     console.log(error);
                 });
-        },
-        promote_user: function (user) {
-        },
-        demote_user: function (user) {
         }
     }
 });
